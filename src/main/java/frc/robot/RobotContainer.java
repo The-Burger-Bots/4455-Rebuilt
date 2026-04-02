@@ -63,6 +63,7 @@ public class RobotContainer {
         Autos.registerNamedCommands(fuelSubsystem, climberSubsystem);
 
         autoChooser = AutoBuilder.buildAutoChooser("ShootOnly");
+        autoChooser.addOption("Everybot", Autos.buildEverbotCommand(fuelSubsystem, climberSubsystem, drivetrain));
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         configureBindings();

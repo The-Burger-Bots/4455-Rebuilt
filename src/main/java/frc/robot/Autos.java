@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -12,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 import frc.robot.subsystems.CANFuelSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 import static frc.robot.Constants.FuelConstants.*;
 import static frc.robot.Constants.ClimbConstants.*;
@@ -179,6 +181,50 @@ public class Autos {
                 SmartDashboard.putString("Auto/Phase", "ShootFeedDone");
             }, fuel)
         ).withName("ShootFeed");
+    }
+
+    /**
+     * Everybot fallback auto — no PathPlanner, just timed robot-centric drives.
+     *
+     * <ol>
+     *   <li>parallel: drive forward {@code EVERYBOT_DRIVE1_SECONDS}, open hooks, spin up launcher</li>
+     *   <li>feed ({@code AUTO_FEED_NEAR_SECONDS})</li>
+     *   <li>drive forward {@code EVERYBOT_DRIVE2_SECONDS} until frame hits tower post</li>
+     *   <li>ClimbDown {@code AUTO_HOOK_CLOSE_SECONDS}</li>
+     * </ol>
+     *
+     * "Forward" = robot-centric -X (front of robot faces tower).
+     */
+    public static Command buildEverbotCommand(CANFuelSubsystem fuel, ClimberSubsystem climber,
+            CommandSwerveDrivetrain drivetrain) {
+        final SwerveRequest.RobotCentric driveReq = new SwerveRequest.RobotCentric();
+
+        Command drive1 = drivetrain.applyRequest(
+                () -> driveReq.withVelocityX(-EVERYBOT_DRIVE_SPEED).withVelocityY(0).withRotationalRate(0))
+            .withTimeout(EVERYBOT_DRIVE1_SECONDS)
+            .beforeStarting(Commands.runOnce(() -> {
+                System.out.println("[Auto][Everybot] Drive 1 start");
+                SmartDashboard.putString("Auto/Phase", "Everybot_Drive1");
+            }));
+
+        Command drive2 = drivetrain.applyRequest(
+                () -> driveReq.withVelocityX(-EVERYBOT_DRIVE_SPEED).withVelocityY(0).withRotationalRate(0))
+            .withTimeout(EVERYBOT_DRIVE2_SECONDS)
+            .beforeStarting(Commands.runOnce(() -> {
+                System.out.println("[Auto][Everybot] Drive 2 start");
+                SmartDashboard.putString("Auto/Phase", "Everybot_Drive2");
+            }));
+
+        return Commands.sequence(
+            Commands.parallel(
+                drive1,
+                buildHookOpenCommand(climber),
+                buildSpinUpCommand(fuel)
+            ),
+            buildShootFeedCommand(fuel),
+            drive2,
+            buildClimbDownCommand(climber)
+        ).withName("Everybot");
     }
 
     /**
