@@ -83,5 +83,13 @@ public final class Constants {
     public static final double AUTO_FEED_FAR_SECONDS   = 2.0;
     public static final double AUTO_LAUNCHER_FAR_MULT  = 0.95;
     public static final double AUTO_FEED_NEAR_SECONDS  = 1.5;
+
+    // Everybot fallback auto — straight drive, no PathPlanner
+    // Drive speed in m/s (positive = toward tower, robot-centric -x)
+    public static final double EVERYBOT_DRIVE_SPEED         = 1.0;
+    // How long to drive before shooting (~3 ft at 1 m/s ≈ 0.9 s)
+    public static final double EVERYBOT_DRIVE1_SECONDS      = 0.9;
+    // How long to drive after shooting to reach the tower post
+    public static final double EVERYBOT_DRIVE2_SECONDS      = 2.5;
   }
 }
