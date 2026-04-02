@@ -41,6 +41,8 @@ public class Autos {
         NamedCommands.registerCommand("ShootFar",  buildShootFarCommand(fuel));
         NamedCommands.registerCommand("HookOpen",  buildHookOpenCommand(climber));
         NamedCommands.registerCommand("ClimbDown", buildClimbDownCommand(climber));
+        NamedCommands.registerCommand("SpinUp",    buildSpinUpCommand(fuel));
+        NamedCommands.registerCommand("ShootFeed", buildShootFeedCommand(fuel));
     }
 
     // -----------------------------------------------------------------------
@@ -132,6 +134,51 @@ public class Autos {
                     System.out.println("[Auto][HookOpen] Done");
                 })
         ).withName("HookOpen");
+    }
+
+    /**
+     * Spins up the launcher without feeding. Run in parallel with a drive path so
+     * the launcher is already at speed when the path ends and ShootFeed fires.
+     */
+    private static Command buildSpinUpCommand(CANFuelSubsystem fuel) {
+        return Commands.sequence(
+            Commands.runOnce(() -> {
+                System.out.println("[Auto][SpinUp] Spinning up");
+                SmartDashboard.putString("Auto/Phase", "SpinUp");
+            }),
+            Commands.run(() -> {
+                fuel.setIntakeLauncherRoller(-0.8 * LAUNCHING_LAUNCHER_PERCENT);
+                fuel.setFeederRoller(0.8 * INDEXER_SPIN_UP_PRE_LAUNCH_PERCENT);
+            }, fuel)
+            .withTimeout(SPIN_UP_SECONDS)
+            .finallyDo(() -> {
+                fuel.stop();
+                System.out.println("[Auto][SpinUp] Done");
+            })
+        ).withName("SpinUp");
+    }
+
+    /**
+     * Feed-only shoot: launcher already spun up, just run the feeder.
+     * Pair with {@code SpinUp} run in parallel during the preceding drive.
+     */
+    private static Command buildShootFeedCommand(CANFuelSubsystem fuel) {
+        return Commands.sequence(
+            Commands.run(() -> {
+                fuel.setIntakeLauncherRoller(-0.8 * LAUNCHING_LAUNCHER_PERCENT);
+                fuel.setFeederRoller(0.8 * INDEXER_LAUNCHING_PERCENT);
+            }, fuel)
+            .withTimeout(AUTO_FEED_NEAR_SECONDS)
+            .beforeStarting(Commands.runOnce(() -> {
+                System.out.println("[Auto][ShootFeed] Feeding");
+                SmartDashboard.putString("Auto/Phase", "ShootFeed");
+            })),
+            Commands.runOnce(() -> {
+                fuel.stop();
+                System.out.println("[Auto][ShootFeed] Done");
+                SmartDashboard.putString("Auto/Phase", "ShootFeedDone");
+            }, fuel)
+        ).withName("ShootFeed");
     }
 
     /**

@@ -1,0 +1,56 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "EverbotToShootPoint"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "HookOpen"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "SpinUp"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootFeed"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "EverbotShootToTower"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ClimbDown"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
